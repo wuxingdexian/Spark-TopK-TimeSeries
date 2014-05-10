@@ -2,10 +2,10 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.scala-ide.sdt.launching.SCALA_CONTAINER"/>
-	<classpathentry kind="lib" path="/home/dhu/mygitworkspace/Spark-TopK-TimeSeries/Top_k_fat.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
-	<classpathentry kind="lib" path="/home/dhu/spark-0.9.1/core/target/spark-core_2.10-0.9.1.jar"/>
-	<classpathentry kind="lib" path="/home/dhu/spark-0.9.1/assembly/target/scala-2.10/spark-assembly_2.10-0.9.1-hadoop1.0.4.jar"/>
-	<classpathentry kind="lib" path="/home/dhu/spark-0.9.1/examples/target/spark-examples_2.10-0.9.1.jar"/>
+	<classpathentry kind="lib" path="/home/baoxin/spark-0.9.0/assembly/target/spark-assembly_2.10-0.9.0-incubating.jar"/>
+	<classpathentry kind="lib" path="/home/baoxin/spark-0.9.0/assembly/target/scala-2.10/spark-assembly_2.10-0.9.0-incubating-hadoop1.0.4.jar"/>
+	<classpathentry kind="lib" path="/home/baoxin/spark-0.9.0/core/target/spark-core_2.10-0.9.0-incubating.jar"/>
+	<classpathentry kind="lib" path="/home/baoxin/workspace/Top_k/Top_k_fat.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

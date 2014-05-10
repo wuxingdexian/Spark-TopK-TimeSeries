@@ -34,8 +34,11 @@ object topk_main {
    * value为数据点的序列（Int数组形式），每个点以各个维度值表示，如三个二维点序列：（8 45 1, -3 88 900, -1213 42 0）
    * 其(key,value)：（（100,-1343），（8 45 1, -3 88 900, -1213 42 0））
    * 
+   * 参数调优参考——http://spark.apache.org/docs/0.9.1/configuration.html
+   * 会影响序列化的有：spark.akka.frameSize spark.storage.memoryFraction spark.storage.memoryFraction spark.kryoserializer.buffer.mb
    */
   def main(args: Array[String]): Unit = {
+    args(1) = "hdfs://192.168.1.111:9000/top-k/input/testdata"
     
     val starttime = System.currentTimeMillis()
     //System.out.println("启动计算：" + new Date(starttime));//方法一：默认方式输出现在时间
@@ -45,21 +48,21 @@ object topk_main {
     System.setProperty("spark.akka.frameSize", "100") 
     //控制用于 Spark 缓存的 Java 堆空间，默认值是0.67，即 2/3 的 Java 堆空间用于 Spark 的缓存。
     //如果任务的计算过程中需要用到较多的内存，而 RDD 所需内存较少，可以调低这个值，以减少计算过程中因为内存不足而产生的 GC 过程。
-    //System.setProperty("spark.storage.memoryFraction", "0.01") 
+    System.setProperty("spark.storage.memoryFraction", "0.01") 
     
     //System.setProperty("spark.shuffle.memoryFraction","0.5") // 如果shuffle频繁，可以考虑提升比值
     //System.setProperty("spark.shuffle.file.buffer.kb","1000") // shuffle的buffer的大小 kb 默认10m
     //System.setProperty("spark.shuffle.consolidateFiles","true")
     
     System.setProperty("spark.executor.memory","1280m")
-    System.setProperty("spark.cores.max","2")
+    System.setProperty("spark.cores.max","1")
     
-    System.setProperty("spark.local.dir","/home/dhu/sparkTmp")
+    System.setProperty("spark.local.dir","/home/baoxin/sparkTmp")
     
     // 序列化 kryo  不知为何  使用kryo序列化，会出现内存溢出的情况
     System.setProperty("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     System.setProperty("spark.kryo.registrator", "spark.hdfs.topk.MyRegistrator")
-    //System.setProperty("spark.kryoserializer.buffer.mb","10")
+    System.setProperty("spark.kryoserializer.buffer.mb","50")
     val sc = new SparkContext(args(0), "hash1",
       System.getenv("SPARK_HOME"), Seq(System.getenv("SPARK_TEST_JAR")))
     //val file = sc.textFile(args(1))
@@ -83,14 +86,14 @@ object topk_main {
     //println("桶生成完毕！总共有桶：" + BKDR_group.count)
     val BKDRtime = System.currentTimeMillis()
     //System.out.println("现在时间：" + new Date(BKDRtime));//方法一：默认方式输出现在时间
-    // 设置存储级别
-    BKDR_group.persist(StorageLevel.MEMORY_AND_DISK)
+    // 设置持久化级别
+    BKDR_group.persist(StorageLevel.MEMORY_ONLY )
     
     // 求两个桶的笛卡尔积（全连接）  然后过滤掉桶hash值相同的记录
     val bucket_combine = BKDR_group.cartesian(BKDR_group).filter{case (key,value) => (key._1 > value._1)}
     //println("桶的笛卡尔积（实际已经完成了桶合并）！总共有桶：" + bucket_combine.count)
-    // 设置存储级别
-    bucket_combine.persist(StorageLevel.MEMORY_AND_DISK)
+    // 设置持久化级别
+    bucket_combine.persist(StorageLevel.MEMORY_ONLY )
     val buckettime = System.currentTimeMillis()
     //System.out.println("现在时间：" + new Date(buckettime))
     //bucket_combine.saveAsTextFile("3k-10.txt")
@@ -125,7 +128,7 @@ object topk_main {
     
     println("启动时间——LSH完成时间：" + (LSHtime- starttime) / 1000 )
     println("LSH完成时间——BKDR桶完成时间：" + (BKDRtime- LSHtime) / 1000 )
-    println("BKDR桶完成时间——buck合并完成时间：" + (buckettime- BKDRtime) / 1000 + " 行数：" + LSH_calculate.count + " 桶数：" + BKDR_group.count + " 桶组合数：" + bucket_combine.count)
+    println("BKDR桶完成时间——buck合并完成时间：" + (buckettime- BKDRtime) / 1000)// + " 行数：" + LSH_calculate.count + " 桶数：" + BKDR_group.count + " 桶组合数：" + bucket_combine.count)
     println("buck合并完成时间——topk完成时间：" + (topktime- buckettime) / 1000)
     println("总共完成时间：" + (topktime - starttime) / 1000)
     
